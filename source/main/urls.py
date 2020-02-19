@@ -16,12 +16,15 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path
 
-from webapp.views import PostsListView, PostDetailView, CommentCreateView, CommentAddView
+from webapp import views
+from webapp.views import CommentCreateView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('', PostsListView.as_view(), name='posts_list'),
-    path('post/<int:pk>/', PostDetailView.as_view(), name='post_detail'),
-    path('post/<int:pk>/add-comment/', CommentCreateView.as_view(), name='post_comment_create'),
-    path('comment/add/', CommentAddView.as_view(), name='comment_add'),
+    path('', views.book_list, name='post_list'),
+    path('post/<int:pk>/', views.post_detail_view, name='post_detail'),
+    path('create_post/', views.post_create, name='post_add'),
+    path('edit/<int:pk>/', views.post_update_view, name='post_edit'),
+    path('delete/<int:pk>', views.post_delete, name='post_delete'),
+    path('post/add-comment/', CommentCreateView.as_view(), name='movie_comment_create'),
 ]

@@ -1,58 +1,72 @@
-from django.shortcuts import render, get_object_or_404, redirect
-from django.urls import reverse
+from django.forms import ModelForm
+from django.http import JsonResponse
+from django.shortcuts import render, redirect, get_object_or_404
 from django.views import View
-from django.contrib import auth
-from django.views.generic import ListView, DetailView, CreateView
 
-from webapp.forms import PostCommentForm, CommentForm
-from webapp.models import Post, PostsComments, Comment
+from webapp.models import Post, Comment, PostsComments
 
 
-class PostsListView(ListView):
-    model = Post
-    template_name = 'posts_list.html'
-    context_object_name = 'posts'
+class PostForm(ModelForm):
+    class Meta:
+        model = Post
+        fields = ['title', 'text']
 
 
-class PostDetailView(DetailView):
-    model = Post
-    template_name = 'post_detail.html'
-    context_object_name = 'post'
-
-    def get_post(self):
-        post = get_object_or_404(Post, pk=self.kwargs['pk'])
-        return post
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data()
-        context['post_comments'] = self.get_post().postscomments_set.all()
-        return context
+def book_list(request, template_name='posts_list.html'):
+    posts = Post.objects.all()
+    data = {}
+    data['post_list'] = posts
+    data['form'] = PostForm
+    return render(request, template_name, data)
 
 
-class CommentCreateView(CreateView):
-    model = Comment
-    template_name = 'comment_create.html'
-    form_class = PostCommentForm
-
-    def create(self):
-        post = get_object_or_404(Post, pk=self.kwargs['pk'])
-        a = PostsComments.objects.create(post_id_id=post.pk, comment_id=Comment.objects.last())
-        return a
-
-    def form_valid(self, form):
-        post = get_object_or_404(Post, pk=self.kwargs['pk'])
-        Comment.objects.create(
-            user=self.request.user,
-            **form.cleaned_data
-        )
-        self.create()
-        return redirect('post_detail', pk=post.pk )
+def post_detail_view(request, pk):
+    post = get_object_or_404(Post, pk=pk)
+    return render(request, 'post.html', context={
+        'post': post,
+        'comments': post.postscomments_set.all()
+    })
 
 
-class CommentAddView(CreateView):
-    model = Comment
-    template_name = 'comment_create.html'
-    form_class = CommentForm
+def post_create(request):
+    if request.method == 'GET':
+        form = PostForm()
+        return render(request, 'create.html', context={'form': form})
+    elif request.method == 'POST':
+        form = PostForm(data=request.POST)
+        if form.is_valid():
+            post = Post.objects.create(
+                title=form.cleaned_data['title'],
+                text=form.cleaned_data['text'],
+                author=request.user
+            )
+            return redirect('post_detail', post.pk)
+        else:
+            return render(request, 'create.html', context={'form': form})
 
-    def get_success_url(self):
-        return reverse('posts_list')
+
+def post_update_view(request, pk, template_name='partial/form.html'):
+    post = get_object_or_404(Post, pk=pk)
+    form = PostForm(request.POST or None, instance=post)
+    if form.is_valid():
+        form.save()
+        return redirect('post_detail', post.pk)
+    return render(request, template_name, {'form': form})
+
+
+def post_delete(request, pk, template_name='post_delete.html'):
+    post = get_object_or_404(Post, pk=pk)
+    if request.method == 'POST':
+        post.delete()
+        return redirect('post_list')
+    return render(request, template_name, {'post': post})
+
+
+class CommentCreateView(View):
+    def post(self, request):
+        # post_id = request.POST.get('post_id')
+        # text = request.POST.get('text')
+        print(request.POST)
+        # obj = Comment.objects.create(user=self.request.user, text=text)
+        # print(obj)
+        return JsonResponse({'status': 'ok'})

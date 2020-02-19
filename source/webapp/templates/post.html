@@ -1,0 +1,115 @@
+{% extends 'base.html' %}
+{% block title %}{{ project.name }}{% endblock %}
+
+{% block menu %}
+{% endblock %}
+
+{% block content %}
+    <h1>{{ post.title }}</h1>
+    <div class="pre"><p><b>Post text: </b>{{ post.text }}</p></div>
+    <p><b>Author: </b>{{ post.author }}</p>
+    <p><b>Created at: </b>{{ post.created_at|date:'d.m.Y H:i:s' }}</p>
+    <p><b>PK </b> {{ post.pk }}</p>
+    <br>
+    <br>
+
+    <div id="comment-list">
+        {% for comment in post.postscomments_set.all %}
+            <div class="card my-3" id="comment-{{ comment.pk }}">
+                <div class="card-body">
+                    <p class="card-text"><b>Comment's text: </b>{{ comment.comment_id }}</p>
+                    <p class="card-subtitle text-muted"><b>Comment's author: </b>{{ comment.comment_id.user }}
+                        | <b>Created at: </b>{{ comment.comment_id.created_at|date:"Y-m-d H:i:s" }}</p>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+
+    <div class="card my-3">
+        <div class="card-body">
+            <form class="form" id="comment-form">
+                <input type="hidden" name="author" id="author" value="{{ request.user.pk }}">
+                <div class="form-group">
+                    <label for="text">Добавить комментарий: </label>
+                    <textarea class="form-control" id="text" name="text"></textarea>{% csrf_token %}
+                </div>
+                <div class="mt-3">
+                    <button type="submit" class="btn btn-primary" id="comment-save" onclick="testPrevent(event);">
+                        Сохранить
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+
+    <script type="application/javascript">
+        function getCookie(name) {
+        var cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            var cookies = document.cookie.split(';');
+            for (var i = 0; i < cookies.length; i++) {
+                var cookie = cookies[i].trim();
+                // Does this cookie string begin with the name we want?
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+        function testPrevent(event) {
+            event.preventDefault();
+            let csrftoken = getCookie('csrftoken');
+            alert('Testing preventDefault!!!');
+            let data = {
+                'text': $('#text').val(),
+                'post_id': {{ post.pk }},
+                'user': '{{ request.user.username }}',
+             };
+            console.log(data);
+            $.ajax({
+                type: "POST",
+                url: '/post/add-comment/',
+                data: {
+                    'text': $('#text').val()
+                },
+                headers: {
+                    "X-CSRFToken": csrftoken
+                },
+                success: function () {
+                    console.log('Function is working');
+                    console.log($('#text').val())
+                },
+                contentType: 'application/json',
+             });
+            $('#text').val('');
+        }
+
+
+
+
+    </script>
+
+    {#    <div class="row">#}
+    {#        <div class="col-sm-10 col-sm-offset-1">#}
+    {#            <div id="add_comment">#}
+    {##}
+    {#                <h3 class="h3_with_fa"><i class="fa fa-edit"></i>Добавить отзыв </h3>#}
+    {##}
+    {#                <div class="row">#}
+    {#                    <div class="col-sm-8">#}
+    {#                        <h1>Create Comment</h1>#}
+    {#                        <textarea name="comment_text" id="comment_txt" cols="30" rows="10"></textarea>#}
+    {#                        <button id='comment_input' style="width: 200px;" onclick="testPrevent(event)"#}
+    {#                                class="custom_btn_border red">Add#}
+    {#                        </button>#}
+    {#                    </div>#}
+    {#                </div>#}
+    {##}
+    {#            </div>#}
+    {#        </div>#}
+    {#    </div>#}
+{% endblock %}

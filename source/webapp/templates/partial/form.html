@@ -1,15 +1,12 @@
-{% csrf_token %}
+{% extends "base.html" %}
 
-{% for error in form.non_field_errors %}
-    <p class="form-error">{{ error }}</p>
-{% endfor %}
+{% block content %}
 
-{% for field in form %}
-    <p><label for="{{ field.id_for_label }}">{{ field.label }}</label></p>
-    <p>{{ field }}</p>
-    {% for error in field.errors %}
-        <p class="form-error">{{ error }}</p>
-    {% endfor %}
-{% endfor %}
+<h2><a href="{% url 'post_list' %}">posts</a></h2>
 
-<p><input type="submit" value="{{ button_text }}"></p>
+<form method="post">{% csrf_token %}
+    {{ form.as_p }}
+    <input type="submit" value="Submit" />
+</form>
+
+{% endblock %}
