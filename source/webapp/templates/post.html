@@ -73,9 +73,7 @@
             $.ajax({
                 type: "POST",
                 url: '/post/add-comment/',
-                data: {
-                    'text': data
-                },
+                data: data,
                 headers: {
                     "X-CSRFToken": csrftoken
                 },
